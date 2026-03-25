@@ -30,7 +30,22 @@
   }
   .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
   
-  .product-img { width: 100%; height: 250px; object-fit: cover; background: #EFEBE9; }
+  /* --- 👇 這裡做了修改以適應 3024*4032 的直式照片 --- */
+  .product-img { 
+    width: 100%; 
+    /* 1. 移除了原本的 height: 250px; */
+    
+    /* 2. 強制圖片區塊維持直式的 3:4 比例 (與 3024*4032 相同) */
+    aspect-ratio: 3 / 4; 
+    
+    /* 3. 確保圖片完整呈現，不被裁切 */
+    object-fit: contain; 
+    
+    background: #EFEBE9; 
+    /* 選擇性：如果圖片太大，可以設定一個最大高度防止畫面太長，但這不是必須的 */
+    /* max-height: 500px; */ 
+  }
+  /* --- 👆 修改結束 --- */
   
   .product-info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; text-align: center; }
   .product-title { font-size: 1.2rem; font-weight: bold; color: #4E342E; margin-bottom: 10px; }
@@ -67,7 +82,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-  // 這裡已經換成你專屬的 bagggg-f9088 金鑰！
+  // Firebase 設定
   const firebaseConfig = {
     apiKey: "AIzaSyAK7QVkEFUCWryls-oOFPcA5Z7Zr5PeQAg",
     authDomain: "bagggg-f9088.firebaseapp.com",
@@ -94,11 +109,13 @@
       return;
     }
 
+    let productsHtml = ''; // 優化：先組合 HTML 字串
+
     querySnapshot.forEach((doc) => {
       const p = doc.data();
-      const html = `
+      productsHtml += `
         <div class="product-card">
-          <img src="${p.imageUrl}" alt="${p.name}" class="product-img">
+          <img src="${p.imageUrl}" alt="${p.name}" class="product-img" loading="lazy">
           <div class="product-info">
             <div class="product-title">${p.name}</div>
             <div class="product-desc">${p.description}</div>
@@ -109,16 +126,21 @@
           </div>
         </div>
       `;
-      container.innerHTML += html;
     });
+    
+    // 最後一次性將組合好的 HTML 塞入容器中
+    container.innerHTML = productsHtml;
+
   }).catch((error) => {
+    console.error("Firebase 讀取錯誤: ", error);
     loading.innerText = "載入失敗，請檢查網路連線";
   });
 
   // 點擊按鈕跳轉至 LINE 並帶入預設訊息
   function orderProduct(productName) {
-    // ⚠️ 記得把 @491xwhjb 換成媽媽工作室的 LINE ID 喔！
-    var lineBaseUrl = "https://line.me/R/oaMessage/@130xhbqv/?"; 
+    // ⚠️ 請確認這裡的 LINE ID 是正確的喔！
+    var lineId = "@130xhbqv"; 
+    var lineBaseUrl = "https://line.me/R/oaMessage/" + lineId + "/?"; 
     var message = "你好，我在網站上看到【" + productName + "】，覺得很喜歡！想詢問這個還有現貨，或是可以幫我客製化訂做嗎？";
     window.open(lineBaseUrl + encodeURIComponent(message));
   }
